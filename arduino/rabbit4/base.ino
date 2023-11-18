@@ -1,8 +1,11 @@
+#include <Servo.h>
 #include "base.h"
 
-int rps[4];
+int rps[4] = {0,0,0,0}, hold = 0;
 volatile long enc[4] = {0, 0, 0, 0};
 volatile long prev_enc[4] = {0, 0, 0, 0};
+
+Servo armServo;
 
 void (*enc_cb[4])() = {
     [](){if (digitalRead(ENCB_PINS[0])) enc[0]++; else enc[0]--;},
@@ -12,43 +15,39 @@ void (*enc_cb[4])() = {
 };
 
 
-void cmd_vel(double lx=0.0, double ly=0.0, double az=0.0) {
-    rps[0] = (lx - ly - D * az) * R;
-    rps[1] = (lx + ly + D * az) * R;
-    rps[2] = (lx + ly - D * az) * R;
-    rps[3] = (lx - ly + D * az) * R;
+void set_vel(int lx=0, int ly=0, int az=0) {
+    rps[0] = (lx + ly - D * az) * R;
+    rps[1] = (lx - ly + D * az) * R;
+    rps[2] = (lx - ly - D * az) * R;
+    rps[3] = (lx + ly + D * az) * R;
+}
 
-    int max_rps = 0;
-    for (int i=0; i<4; i++) {
-        if (abs(rps[i]) > max_rps) {
-            max_rps = abs(rps[i]);
-        }
-    }
-    if (max_rps > MAX_RPS) {
-        for (int i=0; i<4; i++) {
-            rps[i] = rps[i] * MAX_RPS / max_rps;
-        }
-    }
+void set_arm(int cmd) {
+    hold = cmd;
+}
+
+byte ultrasonic() {
+    return 233;
 }
 
 void set_motor(int motor, int pwm) {
-    if (abs(pwm) < MIN_PWM) {
+    int dir = pwm > 0;
+    pwm = abs(pwm);
+    if (pwm < MIN_PWM) {
         digitalWrite(PWM_PINS[motor], 0);
         digitalWrite(DIR1_PINS[motor], HIGH);
         digitalWrite(DIR2_PINS[motor], HIGH);
     } else {
-        analogWrite(PWM_PINS[motor], abs(pwm));
-        if (pwm > 0) {
-            digitalWrite(DIR1_PINS[motor], HIGH);
-            digitalWrite(DIR2_PINS[motor], LOW);
-        } else {
-            digitalWrite(DIR1_PINS[motor], LOW);
-            digitalWrite(DIR2_PINS[motor], HIGH);
-        }
+        if (pwm > MAX_PWM) pwm = MAX_PWM;
+        analogWrite(PWM_PINS[motor], pwm);
+        digitalWrite(DIR1_PINS[motor], dir);
+        digitalWrite(DIR2_PINS[motor], !dir);
     }
 }
 
 void base_setup() {
+    armServo.attach(ARM_PIN);
+
     for (int i=0; i<4; i++) {
         pinMode(PWM_PINS[i], OUTPUT);
         pinMode(DIR1_PINS[i], OUTPUT);
@@ -62,5 +61,11 @@ void base_setup() {
 void base_loop() {
     for (int i=0; i<4; i++) {
         set_motor(i, rps[i]);
+    }
+
+    if (hold) {
+        armServo.write(ARM_HOLD_ANGLE);
+    } else {
+        armServo.write(ARM_RELEASE_ANGLE);
     }
 }
