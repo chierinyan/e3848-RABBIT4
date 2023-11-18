@@ -1,5 +1,7 @@
+#pragma once
+
 #define D 1.0
-#define R 1
+#define R 2
 #define ENC_PR 330
 #define MIN_RPS 0.1
 #define MAX_RPS 255
