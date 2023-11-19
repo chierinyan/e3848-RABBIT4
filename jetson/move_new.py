@@ -7,8 +7,7 @@ from qrcode import QRCode
 from base import base_ctl
 from time import sleep
 
-rubbish = [["no_result"], ["nb"], ["bottle"], ["apple"]]
-
+rubbish = [["carton"], ["can"], ["bottle"], ["noresult"]]
 
 #initialize
 def callback(img,infos):
