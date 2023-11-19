@@ -4,7 +4,14 @@ from time import sleep
 arduino = serial.Serial('/dev/ttyUSB-arduino', 115200)
 
 def base_ctl(lx, ly, az, arm):
-    cmd = bytes([255, lx, ly, az, arm])
+    cmd = [255]
+    for i in lx, ly, az:
+        x = i + 100
+        if x < 0: x = 0
+        elif x > 200: x = 200
+        cmd.append(x)
+    cmd.append(arm)
+    cmd = bytes(cmd)
     arduino.write(cmd)
     ultrasonic = arduino.read()
     ultrasonic = int.from_bytes(ultrasonic, byteorder='big')
