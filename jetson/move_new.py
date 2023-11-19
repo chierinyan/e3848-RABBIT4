@@ -27,6 +27,7 @@ def find_rubbish():
     rubbish_detected, centre_vertical_line = False, False
 
     while True:
+        # there is pause during the rotation
         base_ctl(0,0,30,0)
         sleep(2)
         base_ctl(0,0,0,0)
@@ -59,6 +60,7 @@ def detect_rubbish(frame):
     # Return a boolean indicating if rubbish is detected and its position on the centre vertical line
     # Example: return True, centre_vertical_line, rubbish_index
 
+    # find the nearest rubbish in the center line
     list = detect.detect_img(frame, callback)
     binlist = qrcode.detect(frame)
     if list == []:
@@ -67,17 +69,20 @@ def detect_rubbish(frame):
         list.sort(key= rank)
         first_rubbish = list[0]
 
+    #if rubbish is too close to the bin, abandon the result.
     distance_percentage = 0.2
     for bin in binlist:
         if abs(first_rubbish[2] - bin[1]) < distance_percentage:
             return False, False, 0
 
+    #find the correct bin to dispose the rubbish
     for i in range(len(rubbish)):
         for j in rubbish[i]:
             if first_rubbish[0] == j:
                 rubbish_index = i
                 break
 
+    # judge if it is in the centerline
     threshold = 0.05
     if first_rubbish[2] < 0.5 + threshold and first_rubbish[2] > 0.5 - threshold:
         is_center = True
@@ -96,20 +101,12 @@ def pick_up_rubbish():
     base_ctl(0,0,0,1)
 
     '''
-        while ultrasonic_sensor_module.get_distance() > threshold_distance:
-        arduino_module.move_forward()
+    while base_ctl(30,0,0,0) > threshold_distance:
+        continue
+    base_ctl(0,0,0,0)
     '''
-
+    base_ctl(0, 0, 0, 1)
     print("in front of rubbish")
-
-    '''
-    # Stop the robot
-    arduino_module.stop()
-
-    # Pick up the rubbish using the robot arm
-    robot_arm_module.pick_up()
-    '''
-
     print('successfully collect rubbish')
 
 
@@ -120,8 +117,12 @@ def find_bin(index):
     previous_status = ""
 
     while True:
-        base_ctl(0,0,30,1)
+        # rotation with pause
+        base_ctl(0, 0, 30, 0)
+        sleep(2)
+        base_ctl(0, 0, 0, 0)
 
+        #testing
         if previous_status != "find bin":
             print("find bin")
         previous_status = "find bin"
@@ -167,21 +168,19 @@ def go_to_bin():
     sleep(1)
     base_ctl(0,0,0,0)
     
+
     '''
-        while ultrasonic_sensor_module.get_distance() > threshold_distance:
-        arduino_module.move_forward()
-
-    # Stop the robot
-    arduino_module.stop()
-
-    # Pick up the rubbish using the robot arm
-    robot_arm_module.loose_arm()
+    while base_ctl(30,0,0,1) > threshold_distance:
+        continue
+    base_ctl(0,0,0,1)
+    base_ctl(0,0,0,0)
     '''
     print("finished the process")
 
+
 def go_to_origin():
     base_ctl(-30, 0, 0, 1)
-    sleep(2)
+    sleep(4)
     base_ctl(0, 0, 0, 0)
 
 if __name__ == "__main__":
