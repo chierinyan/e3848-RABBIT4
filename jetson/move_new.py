@@ -7,7 +7,7 @@ from qrcode import QRCode
 from base import base_ctl
 from time import sleep
 
-rubbish = ["sb", "nb", "bottle", "apple"]
+rubbish = [["no_result"], ["nb"], ["bottle"], ["apple"]]
 
 
 #initialize
@@ -20,7 +20,7 @@ qrcode = QRCode()
 
 def find_rubbish():
     # Use OpenCV to capture video feed
-    video_capture = cv2.VideoCapture(1) #the index of the webcam
+    video_capture = cv2.VideoCapture(0) #the index of the webcam
 
     rubbish_detected, centre_vertical_line = False, False
 
@@ -55,15 +55,22 @@ def detect_rubbish(frame):
     # Example: return True, centre_vertical_line, rubbish_index
 
     list = detect.detect_img(frame, callback)
+    binlist = qrcode.detect(frame)
     if list == []:
         return False, False, 0
     else:
         first_rubbish = list[0]
 
+    distance_percentage = 0.2
+    for bin in binlist:
+        if abs(first_rubbish[2] - bin[1]) < distance_percentage:
+            return False, False, 0
+
     for i in range(len(rubbish)):
-        if first_rubbish[0] == rubbish[i]:
-            rubbish_index = i
-            break
+        for j in rubbish[i]:
+            if first_rubbish[0] == j:
+                rubbish_index = i
+                break
 
     threshold = 0.05
     if first_rubbish[2] < 0.5 + threshold and first_rubbish[2] > 0.5 - threshold:
@@ -103,11 +110,16 @@ def pick_up_rubbish():
 
 def find_bin(index):
     # Use OpenCV to capture video feed for QR code scanning
-    video_capture = cv2.VideoCapture(1)
+    video_capture = cv2.VideoCapture(0)
+    previous_status = ""
 
     while True:
         base_ctl(0,0,30,1)
-        print("find bin")
+
+        if previous_status != "find bin":
+            print("find bin")
+        previous_status = "find bin"
+
         # Capture frame-by-frame
         ret, frame = video_capture.read()
         if ret is False:
@@ -161,7 +173,10 @@ def go_to_bin():
     '''
     print("finished the process")
 
-
+def go_to_origin():
+    base_ctl(-30, 0, 0, 1)
+    sleep(2)
+    base_ctl(0, 0, 0, 0)
 
 if __name__ == "__main__":
     # Main program flow
@@ -177,5 +192,8 @@ if __name__ == "__main__":
 
         # Step 4: Go to the bin
         go_to_bin()
+
+        # Step 5: Go to origin
+        go_to_origin()
 
         
