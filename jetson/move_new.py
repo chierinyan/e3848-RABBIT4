@@ -118,9 +118,9 @@ def find_bin(index):
 
     while True:
         # rotation with pause
-        base_ctl(0, 0, 30, 0)
+        base_ctl(0, 0, 30, 1)
         sleep(2)
-        base_ctl(0, 0, 0, 0)
+        base_ctl(0, 0, 0, 1)
 
         #testing
         if previous_status != "find bin":
@@ -179,7 +179,7 @@ def go_to_bin():
 
 
 def go_to_origin():
-    base_ctl(-30, 0, 0, 1)
+    base_ctl(-30, 0, 0, 0)
     sleep(4)
     base_ctl(0, 0, 0, 0)
 
