@@ -16,7 +16,9 @@ def callback(img,infos):
 detect = Detect()
 qrcode = QRCode()
 
-
+# rank the closest rubbish to the middle line to the top priority 
+def rank(element):
+    return abs(0.5-element[2])
 
 def find_rubbish():
     # Use OpenCV to capture video feed
@@ -26,6 +28,9 @@ def find_rubbish():
 
     while True:
         base_ctl(0,0,30,0)
+        sleep(2)
+        base_ctl(0,0,0,0)
+        
 
         # Capture frame-by-frame
         ret, frame = video_capture.read()
@@ -59,6 +64,7 @@ def detect_rubbish(frame):
     if list == []:
         return False, False, 0
     else:
+        list.sort(key= rank)
         first_rubbish = list[0]
 
     distance_percentage = 0.2
