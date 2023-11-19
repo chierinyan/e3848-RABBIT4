@@ -4,6 +4,8 @@ import cv2
 # import arduino_module  # Assume a module for Arduino communication
 from model_predict import Detect
 from qrcode import QRCode
+import base
+from time import sleep
 
 rubbish = ["sb", "nb", "bottle", "apple"]
 
@@ -23,9 +25,7 @@ def find_rubbish():
     rubbish_detected, centre_vertical_line = False, False
 
     while True:
-        '''
-        arduino_module.rotation()
-        '''
+        base_ctl(0,0,30,0)
 
         # Capture frame-by-frame
         ret, frame = video_capture.read()
@@ -40,9 +40,7 @@ def find_rubbish():
         if rubbish_detected and centre_vertical_line:
             break
 
-    '''
-    arduino_module.stop()
-    '''
+    base_ctl(0,0,0,0)
     print("rubbish is on the center ahead")
     print("rubbish type:", rubbish[rubbish_type])
     # Release the video capture object
@@ -79,6 +77,10 @@ def detect_rubbish(frame):
 def pick_up_rubbish():
     # Instruct the robot to go forward using ultrasonic sensor to sense the distance
     threshold_distance = 10
+    
+    base_ctl(30,0,0,0)
+    sleep(1)
+    base_ctl(0,0,0,1)
 
     '''
         while ultrasonic_sensor_module.get_distance() > threshold_distance:
@@ -104,9 +106,7 @@ def find_bin(index):
     video_capture = cv2.VideoCapture(1)
 
     while True:
-        '''
-        arduino_module.rotation()
-        '''
+        base_ctl(0,0,30,1)
         print("find bin")
         # Capture frame-by-frame
         ret, frame = video_capture.read()
@@ -120,9 +120,7 @@ def find_bin(index):
         # If QR code is found, break from the loop
         if qr_code_found and central_vertical_line:
             break
-    '''
-    arduino_module.stop()
-    '''
+    base_ctl(0,0,0,1)
     print("successfully find the target bin")
     # Release the video capture object
     video_capture.release()
@@ -146,6 +144,11 @@ def detect_qrcode(frame, rubbish_index):
 def go_to_bin():
     # Instruct the robot to go forward using ultrasonic sensor to sense the distance
     threshold_distance = 10
+    
+    base_ctl(30,0,0,1)
+    sleep(1)
+    base_ctl(0,0,0,0)
+    
     '''
         while ultrasonic_sensor_module.get_distance() > threshold_distance:
         arduino_module.move_forward()
@@ -175,3 +178,4 @@ if __name__ == "__main__":
         # Step 4: Go to the bin
         go_to_bin()
 
+        
