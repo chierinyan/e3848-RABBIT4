@@ -5,6 +5,9 @@ import cv2
 from model_predict import Detect
 from qrcode import QRCode
 
+# sb bin is 0 in QRcode analysis
+# nb bin is 1 in QRcode analysis
+# bottle bin is 2 in QR analysis
 rubbish = ["sb", "nb", "bottle", "apple"]
 
 
