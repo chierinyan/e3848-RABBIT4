@@ -8,6 +8,14 @@ from base import base_ctl
 from time import sleep
 
 rubbish = [["carton"], ["can"], ["bottle"], ["noresult"]]
+rotation_speed = 30
+rotation_time = 2
+linear_speed = 30
+linear_time = 3
+#if rubbish is too close to the bin, abandon the result.
+distance_percentage = 0.2
+center_line_threshold = 0.05
+ultrasonic_threshold_distance = 10
 
 #initialize
 def callback(img,infos):
@@ -27,8 +35,8 @@ def find_rubbish():
 
     while True:
         # there is pause during the rotation
-        base_ctl(0,0,30,0)
-        sleep(2)
+        base_ctl(0,0,rotation_speed,0)
+        sleep(rotation_time)
         base_ctl(0,0,0,0)
         
 
@@ -68,8 +76,7 @@ def detect_rubbish(frame):
         list.sort(key= rank)
         first_rubbish = list[0]
 
-    #if rubbish is too close to the bin, abandon the result.
-    distance_percentage = 0.2
+
     for bin in binlist:
         if abs(first_rubbish[2] - bin[1]) < distance_percentage:
             return False, False, 0
@@ -82,8 +89,7 @@ def detect_rubbish(frame):
                 break
 
     # judge if it is in the centerline
-    threshold = 0.05
-    if first_rubbish[2] < 0.5 + threshold and first_rubbish[2] > 0.5 - threshold:
+    if first_rubbish[2] < 0.5 + center_line_threshold and first_rubbish[2] > 0.5 - center_line_threshold:
         is_center = True
     else:
         is_center = False
@@ -93,17 +99,17 @@ def detect_rubbish(frame):
 
 def pick_up_rubbish():
     # Instruct the robot to go forward using ultrasonic sensor to sense the distance
-    threshold_distance = 10
     
-    base_ctl(30,0,0,0)
-    sleep(1)
+    base_ctl(linear_speed,0,0,0)
+    sleep(linear_time)
     base_ctl(0,0,0,1)
 
     '''
-    while base_ctl(30,0,0,0) > threshold_distance:
+    while base_ctl(linear_speed,0,0,0) > ultrasonic_threshold_distance:
         continue
     base_ctl(0,0,0,0)
     '''
+
     base_ctl(0, 0, 0, 1)
     print("in front of rubbish")
     print('successfully collect rubbish')
@@ -117,8 +123,8 @@ def find_bin(index):
 
     while True:
         # rotation with pause
-        base_ctl(0, 0, 30, 1)
-        sleep(2)
+        base_ctl(0, 0, rotation_speed, 1)
+        sleep(rotation_time)
         base_ctl(0, 0, 0, 1)
 
         #testing
@@ -151,9 +157,8 @@ def detect_qrcode(frame, rubbish_index):
     if list == []:
         return False, False
     else:
-        threshold = 0.05
         for bin in list:
-                if bin[0] == rubbish_index and bin[1] < 0.5 + threshold and bin[1] > 0.5 - threshold:
+                if bin[0] == rubbish_index and bin[1] < 0.5 + center_line_threshold and bin[1] > 0.5 - center_line_threshold:
                     return True, True
         return False, False
 
@@ -161,15 +166,15 @@ def detect_qrcode(frame, rubbish_index):
 
 def go_to_bin():
     # Instruct the robot to go forward using ultrasonic sensor to sense the distance
-    threshold_distance = 10
+
     
-    base_ctl(30,0,0,1)
-    sleep(1)
+    base_ctl(linear_speed,0,0,1)
+    sleep(linear_time)
     base_ctl(0,0,0,0)
     
 
     '''
-    while base_ctl(30,0,0,1) > threshold_distance:
+    while base_ctl(30,0,0,1) > ultrasonic_threshold_distance:
         continue
     base_ctl(0,0,0,1)
     base_ctl(0,0,0,0)
@@ -178,8 +183,8 @@ def go_to_bin():
 
 
 def go_to_origin():
-    base_ctl(-30, 0, 0, 0)
-    sleep(4)
+    base_ctl(-1*linear_speed, 0, 0, 0)
+    sleep(linear_time)
     base_ctl(0, 0, 0, 0)
 
 if __name__ == "__main__":
