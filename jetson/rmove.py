@@ -10,15 +10,16 @@ rubbish = [["bottle"], ["general waste"], ["empty"], ["carton"],["can"]]
 camera_index = 0
 
 #before recognize rubbish in list, we assume the item label is no_result_label
-no_result_label = 3
+no_result_label = 2
 rotation_speed = 30
 rotation_time = 2
 linear_speed = 30
-linear_time = 3
+linear_time = 4
 #if rubbish is too close to the bin, abandon the result.
 distance_percentage = 0.2
 center_line_threshold = 0.1
 ultrasonic_threshold_distance = 2
+height_threshold = 0.7
 hostaddr = "http://10.68.43.144:4000"
 
 #initialize
@@ -78,12 +79,12 @@ def detect_rubbish(frame):
     #binlist = qrcode.detect(frame)
     total = client.detect(frame)
     if not total:
-        return False, False, 3
+        return False, False, no_result_label
     list, binlist = total
     print("list:", list)
     print("binlist: ", binlist)
     if list == []:
-        return False, False, 3
+        return False, False, no_result_label
     else:
         list.sort(key= rank)
         first_rubbish = list[0]
@@ -91,7 +92,7 @@ def detect_rubbish(frame):
 
     for bin in binlist:
         if abs(first_rubbish[2] - bin[1]) < distance_percentage:
-            return False, False, 3
+            return False, False, no_result_label
 
     #find the correct bin to dispose the rubbish
     rubbish_index = no_result_label
@@ -176,21 +177,36 @@ def detect_qrcode(frame, rubbish_index):
                     return True, True
         return False, False
 
-
-
-def go_to_bin():
-    # Instruct the robot to go forward using ultrasonic sensor to sense the distance
-
+#if the center of QR code is too hight in the picture, it proves arrives at the QRcode position
+def qrcode_distance(frame,rubbish_index):
+    total = client.detect(frame)
+    if not total or len(total) == 1:
+        return True
+    list = total[1]
+    print("binlist: ", list)
+    if not list:
+        return True
+    else:
+        for bin in list:
+                if bin[0] == rubbish_index and bin[2] < height_threshold:
+                    print(bin[2])
+                    return False
+        return True
     
 
-    while base.base_ctl(linear_speed,0,0,1) > ultrasonic_threshold_distance:
-        continue
+def go_to_bin(rubbish_index):
+    # Instruct the robot to go forward using ultrasonic sensor to sense the distance
+
+    ret, frame = video_capture.read()
+    while qrcode_distance(frame, rubbish_index):
+        base.base_ctl(linear_speed,0,0,1)
     base.base_ctl(0,0,0,1)
     print("arrive at the bin")
     base.base_ctl(0,0,0,0)
     print("finished the process")
 
 
+# go backward
 def go_to_origin():
     base.base_ctl(-1*linear_speed, 0, 0, 0)
     sleep(linear_time)
@@ -211,7 +227,7 @@ if __name__ == "__main__":
         find_bin(index)
 
         # Step 4: Go to the bin
-        go_to_bin()
+        go_to_bin(index)
 
         # Step 5: Go to origin
         go_to_origin()
