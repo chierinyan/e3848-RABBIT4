@@ -4,10 +4,11 @@ import cv2
 # import arduino_module  # Assume a module for Arduino communication
 from model_predict import Detect
 from qrcode import QRCode
-from base import base_ctl
+from base import Base
 from time import sleep
 
 rubbish = [["carton"], ["can"], ["bottle"], ["noresult"]]
+#before recognize rubbish in list, we assume the item label is no_result_label
 no_result_label = 3
 rotation_speed = 30
 rotation_time = 2
@@ -23,6 +24,7 @@ def callback(img,infos):
     print(infos)
 detect = Detect()
 qrcode = QRCode()
+base = Base()
 
 # rank the closest rubbish to the middle line to the top priority 
 def rank(element):
@@ -35,10 +37,10 @@ def find_rubbish():
     rubbish_detected, centre_vertical_line = False, False
 
     while True:
-        # there is pause during the rotation
-        base_ctl(0,0,rotation_speed,0)
+        # there is pause during the rotation for static recognition
+        base.base_ctl(0,0,rotation_speed,0)
         sleep(rotation_time)
-        base_ctl(0,0,0,0)
+        base.base_ctl(0,0,0,0)
         
 
         # Capture frame-by-frame
@@ -54,7 +56,7 @@ def find_rubbish():
         if rubbish_detected and centre_vertical_line:
             break
 
-    base_ctl(0,0,0,0)
+    base.base_ctl(0,0,0,0)
     print("rubbish is on the center ahead")
     print("rubbish type:", rubbish[rubbish_type])
     # Release the video capture object
@@ -69,6 +71,7 @@ def detect_rubbish(frame):
     # Example: return True, centre_vertical_line, rubbish_index
 
     # find the nearest rubbish in the center line
+    # list = [["bottle"(pattern),0.65(probability),0.2(x),0.5(y) ]] (center point of the item)
     list = detect.detect_img(frame, callback)
     binlist = qrcode.detect(frame)
     if list == []:
@@ -93,7 +96,7 @@ def detect_rubbish(frame):
     # judge if the rubbish is on the list
     if rubbish_index == no_result_label:
         return False, False, 0
-    
+
     # judge if it is in the centerline
     if first_rubbish[2] < 0.5 + center_line_threshold and first_rubbish[2] > 0.5 - center_line_threshold:
         is_center = True
@@ -106,17 +109,17 @@ def detect_rubbish(frame):
 def pick_up_rubbish():
     # Instruct the robot to go forward using ultrasonic sensor to sense the distance
     
-    base_ctl(linear_speed,0,0,0)
+    base.base_ctl(linear_speed,0,0,0)
     sleep(linear_time)
-    base_ctl(0,0,0,1)
+    base.base_ctl(0,0,0,1)
 
     '''
-    while base_ctl(linear_speed,0,0,0) > ultrasonic_threshold_distance:
+    while base.base_ctl(linear_speed,0,0,0) > ultrasonic_threshold_distance:
         continue
-    base_ctl(0,0,0,0)
+    base.base_ctl(0,0,0,0)
     '''
 
-    base_ctl(0, 0, 0, 1)
+    base.base_ctl(0, 0, 0, 1)
     print("in front of rubbish")
     print('successfully collect rubbish')
 
@@ -129,9 +132,9 @@ def find_bin(index):
 
     while True:
         # rotation with pause
-        base_ctl(0, 0, rotation_speed, 1)
+        base.base_ctl(0, 0, rotation_speed, 1)
         sleep(rotation_time)
-        base_ctl(0, 0, 0, 1)
+        base.base_ctl(0, 0, 0, 1)
 
         #testing
         if previous_status != "find bin":
@@ -150,7 +153,7 @@ def find_bin(index):
         # If QR code is found, break from the loop
         if qr_code_found and central_vertical_line:
             break
-    base_ctl(0,0,0,1)
+    base.base_ctl(0,0,0,1)
     print("successfully find the target bin")
     # Release the video capture object
     video_capture.release()
@@ -174,24 +177,24 @@ def go_to_bin():
     # Instruct the robot to go forward using ultrasonic sensor to sense the distance
 
     
-    base_ctl(linear_speed,0,0,1)
+    base.base_ctl(linear_speed,0,0,1)
     sleep(linear_time)
-    base_ctl(0,0,0,0)
+    base.base_ctl(0,0,0,0)
     
 
     '''
-    while base_ctl(30,0,0,1) > ultrasonic_threshold_distance:
+    while base.base_ctl(30,0,0,1) > ultrasonic_threshold_distance:
         continue
-    base_ctl(0,0,0,1)
-    base_ctl(0,0,0,0)
+    base.base_ctl(0,0,0,1)
+    base.base_ctl(0,0,0,0)
     '''
     print("finished the process")
 
 
 def go_to_origin():
-    base_ctl(-1*linear_speed, 0, 0, 0)
+    base.base_ctl(-1*linear_speed, 0, 0, 0)
     sleep(linear_time)
-    base_ctl(0, 0, 0, 0)
+    base.base_ctl(0, 0, 0, 0)
 
 if __name__ == "__main__":
     # Main program flow
