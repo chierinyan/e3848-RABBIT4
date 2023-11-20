@@ -8,6 +8,7 @@ from base import base_ctl
 from time import sleep
 
 rubbish = [["carton"], ["can"], ["bottle"], ["noresult"]]
+no_result_label = 3
 rotation_speed = 30
 rotation_time = 2
 linear_speed = 30
@@ -82,12 +83,17 @@ def detect_rubbish(frame):
             return False, False, 0
 
     #find the correct bin to dispose the rubbish
+    rubbish_index = no_result_label
     for i in range(len(rubbish)):
         for j in rubbish[i]:
             if first_rubbish[0] == j:
                 rubbish_index = i
                 break
 
+    # judge if the rubbish is on the list
+    if rubbish_index == no_result_label:
+        return False, False, 0
+    
     # judge if it is in the centerline
     if first_rubbish[2] < 0.5 + center_line_threshold and first_rubbish[2] > 0.5 - center_line_threshold:
         is_center = True
