@@ -1,7 +1,5 @@
 import cv2
-# import robot_arm_module  # Assume a module for robot arm control
-# import ultrasonic_sensor_module  # Assume a module for ultrasonic sensor
-# import arduino_module  # Assume a module for Arduino communication
+
 #from model_predict import Detect
 #from qrcode import QRCode
 from client import Client
@@ -19,14 +17,13 @@ linear_time = 3
 distance_percentage = 0.2
 center_line_threshold = 0.05
 ultrasonic_threshold_distance = 10
+hostaddr = "http://10.68.43.144:4000"
 
 #initialize
-def callback(img,infos):
-    print(infos)
     
 #detect = Detect()
 #qrcode = QRCode()
-client = Client()
+client = Client(host= hostaddr)
 
 base = Base()
 
@@ -77,6 +74,7 @@ def detect_rubbish(frame):
 
     # find the nearest rubbish in the center line
     # list = [["bottle"(pattern),0.65(probability),0.2(x),0.5(y) ]] (center point of the item)
+    # binlist = [[label_number,x,y]]
     #list = detect.detect_img(frame, callback)
     #binlist = qrcode.detect(frame)
     list, binlist = client.detect(frame)
@@ -115,18 +113,12 @@ def detect_rubbish(frame):
 def pick_up_rubbish():
     # Instruct the robot to go forward using ultrasonic sensor to sense the distance
     
-    base.base_ctl(linear_speed,0,0,0)
-    sleep(linear_time)
-    base.base_ctl(0,0,0,1)
 
-    '''
     while base.base_ctl(linear_speed,0,0,0) > ultrasonic_threshold_distance:
         continue
     base.base_ctl(0,0,0,0)
-    '''
-
-    base.base_ctl(0, 0, 0, 1)
     print("in front of rubbish")
+    base.base_ctl(0, 0, 0, 1)
     print('successfully collect rubbish')
 
 
@@ -184,17 +176,12 @@ def go_to_bin():
     # Instruct the robot to go forward using ultrasonic sensor to sense the distance
 
     
-    base.base_ctl(linear_speed,0,0,1)
-    sleep(linear_time)
-    base.base_ctl(0,0,0,0)
-    
 
-    '''
-    while base.base_ctl(30,0,0,1) > ultrasonic_threshold_distance:
+    while base.base_ctl(linear_speed,0,0,1) > ultrasonic_threshold_distance:
         continue
     base.base_ctl(0,0,0,1)
+    print("arrive at the bin")
     base.base_ctl(0,0,0,0)
-    '''
     print("finished the process")
 
 
