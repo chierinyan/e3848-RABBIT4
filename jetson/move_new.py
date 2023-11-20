@@ -4,6 +4,7 @@ import cv2
 # import arduino_module  # Assume a module for Arduino communication
 from model_predict import Detect
 from qrcode import QRCode
+from client import Client
 from base import Base
 from time import sleep
 
@@ -22,9 +23,13 @@ ultrasonic_threshold_distance = 10
 #initialize
 def callback(img,infos):
     print(infos)
-detect = Detect()
-qrcode = QRCode()
+    
+#detect = Detect()
+#qrcode = QRCode()
+client = Client()
+
 base = Base()
+
 
 # rank the closest rubbish to the middle line to the top priority 
 def rank(element):
@@ -72,8 +77,9 @@ def detect_rubbish(frame):
 
     # find the nearest rubbish in the center line
     # list = [["bottle"(pattern),0.65(probability),0.2(x),0.5(y) ]] (center point of the item)
-    list = detect.detect_img(frame, callback)
-    binlist = qrcode.detect(frame)
+    #list = detect.detect_img(frame, callback)
+    #binlist = qrcode.detect(frame)
+    list, binlist = client.detect(frame)
     if list == []:
         return False, False, 0
     else:
@@ -162,7 +168,8 @@ def detect_qrcode(frame, rubbish_index):
     # Implement QR detection logic using OpenCV
     # Return a boolean indicating if rubbish is detected and its position on the centre vertical line
     # Example: return True, True (QR code detection, center vertical line)
-    list = qrcode.detect(frame)
+    # list = qrcode.detect(frame)
+    list = client.detect(frame)[1]
     if list == []:
         return False, False
     else:
