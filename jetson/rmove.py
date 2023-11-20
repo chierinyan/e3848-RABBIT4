@@ -6,8 +6,9 @@ from client import Client
 from base import Base
 from time import sleep
 
-rubbish = [["carton"], ["can"], ["bottle"], ["noresult"]]
-camera_index = 1
+rubbish = [["bottle"], ["general waste"], ["empty"], ["carton"],["can"]]
+camera_index = 0
+
 #before recognize rubbish in list, we assume the item label is no_result_label
 no_result_label = 3
 rotation_speed = 30
