@@ -19,7 +19,7 @@ linear_time = 4
 distance_percentage = 0.2
 center_line_threshold = 0.1
 ultrasonic_threshold_distance = 2
-height_threshold = 0.7
+height_threshold = 0.5
 hostaddr = "http://10.68.43.144:4000"
 
 #initialize
@@ -120,9 +120,8 @@ def detect_rubbish(frame):
 def pick_up_rubbish():
     # Instruct the robot to go forward using ultrasonic sensor to sense the distance
     
-
     while base.base_ctl(linear_speed,0,0,0) > ultrasonic_threshold_distance:
-        continue
+        print("approach the rubbish")
     base.base_ctl(0,0,0,0)
     print("in front of rubbish")
     base.base_ctl(0, 0, 0, 1)
@@ -186,6 +185,7 @@ def qrcode_distance(rubbish_index):
     video_capture = cv2.VideoCapture(camera_index) 
     ret, frame = video_capture.read()
     total = client.detect(frame)
+    video_capture.release()
     if not total or len(total) == 1:
         return True
     list = total[1]
@@ -195,18 +195,19 @@ def qrcode_distance(rubbish_index):
     else:
         for bin in list:
                 if bin[0] == rubbish_index and bin[2] > height_threshold:
-                    print(bin[2])
+                    print("height: ",bin[2])
                     return False
         return True
-    video_capture.release()
 
 def go_to_bin(rubbish_index):
     # Instruct the robot to go forward using ultrasonic sensor to sense the distance
 
     while qrcode_distance(rubbish_index):
         base.base_ctl(linear_speed,0,0,1)
+        print("haven't arrived at bin yet")
     base.base_ctl(0,0,0,1)
     print("arrive at the bin")
+    sleep(2)
     base.base_ctl(0,0,0,0)
     print("finished the process")
 
