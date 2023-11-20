@@ -37,6 +37,7 @@ def rank(element):
 
 def find_rubbish():
     # Use OpenCV to capture video feed
+    video_capture = cv2.VideoCapture(camera_index) 
 
     rubbish_detected, centre_vertical_line = False, False
 
@@ -63,7 +64,8 @@ def find_rubbish():
     base.base_ctl(0,0,0,0)
     print("rubbish is on the center ahead")
     print("rubbish type:", rubbish[rubbish_type])
-
+    
+    video_capture.release()
     return rubbish_type
 
 
@@ -130,6 +132,7 @@ def pick_up_rubbish():
 
 def find_bin(index):
     # Use OpenCV to capture video feed for QR code scanning
+    video_capture = cv2.VideoCapture(camera_index) 
     previous_status = ""
 
     while True:
@@ -157,6 +160,7 @@ def find_bin(index):
             break
     base.base_ctl(0,0,0,1)
     print("successfully find the target bin")
+    video_capture.release()
     
 
 def detect_qrcode(frame, rubbish_index):
@@ -178,7 +182,9 @@ def detect_qrcode(frame, rubbish_index):
         return False, False
 
 #if the center of QR code is too hight in the picture, it proves arrives at the QRcode position
-def qrcode_distance(frame,rubbish_index):
+def qrcode_distance(rubbish_index):
+    video_capture = cv2.VideoCapture(camera_index) 
+    ret, frame = video_capture.read()
     total = client.detect(frame)
     if not total or len(total) == 1:
         return True
@@ -188,17 +194,16 @@ def qrcode_distance(frame,rubbish_index):
         return True
     else:
         for bin in list:
-                if bin[0] == rubbish_index and bin[2] < height_threshold:
+                if bin[0] == rubbish_index and bin[2] > height_threshold:
                     print(bin[2])
                     return False
         return True
-    
+    video_capture.release()
 
 def go_to_bin(rubbish_index):
     # Instruct the robot to go forward using ultrasonic sensor to sense the distance
 
-    ret, frame = video_capture.read()
-    while qrcode_distance(frame, rubbish_index):
+    while qrcode_distance(rubbish_index):
         base.base_ctl(linear_speed,0,0,1)
     base.base_ctl(0,0,0,1)
     print("arrive at the bin")
@@ -216,7 +221,7 @@ if __name__ == "__main__":
     # Main program flow
 
     while True:
-        video_capture = cv2.VideoCapture(camera_index) 
+        
         # Step 1: Find rubbish
         index = find_rubbish()
 
@@ -232,7 +237,6 @@ if __name__ == "__main__":
         # Step 5: Go to origin
         go_to_origin()
 
-        video_capture.release()
 
     
 
