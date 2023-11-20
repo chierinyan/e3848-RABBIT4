@@ -7,6 +7,7 @@ from base import Base
 from time import sleep
 
 rubbish = [["carton"], ["can"], ["bottle"], ["noresult"]]
+camera_index = 1
 #before recognize rubbish in list, we assume the item label is no_result_label
 no_result_label = 3
 rotation_speed = 30
@@ -15,8 +16,8 @@ linear_speed = 30
 linear_time = 3
 #if rubbish is too close to the bin, abandon the result.
 distance_percentage = 0.2
-center_line_threshold = 0.05
-ultrasonic_threshold_distance = 10
+center_line_threshold = 0.1
+ultrasonic_threshold_distance = 2
 hostaddr = "http://10.68.43.144:4000"
 
 #initialize
@@ -34,7 +35,6 @@ def rank(element):
 
 def find_rubbish():
     # Use OpenCV to capture video feed
-    video_capture = cv2.VideoCapture(0) #the index of the webcam
 
     rubbish_detected, centre_vertical_line = False, False
 
@@ -61,8 +61,6 @@ def find_rubbish():
     base.base_ctl(0,0,0,0)
     print("rubbish is on the center ahead")
     print("rubbish type:", rubbish[rubbish_type])
-    # Release the video capture object
-    video_capture.release()
 
     return rubbish_type
 
@@ -77,9 +75,14 @@ def detect_rubbish(frame):
     # binlist = [[label_number,x,y]]
     #list = detect.detect_img(frame, callback)
     #binlist = qrcode.detect(frame)
-    list, binlist = client.detect(frame)
+    total = client.detect(frame)
+    if not total:
+        return False, False, 3
+    list, binlist = total
+    print("list:", list)
+    print("binlist: ", binlist)
     if list == []:
-        return False, False, 0
+        return False, False, 3
     else:
         list.sort(key= rank)
         first_rubbish = list[0]
@@ -87,7 +90,7 @@ def detect_rubbish(frame):
 
     for bin in binlist:
         if abs(first_rubbish[2] - bin[1]) < distance_percentage:
-            return False, False, 0
+            return False, False, 3
 
     #find the correct bin to dispose the rubbish
     rubbish_index = no_result_label
@@ -125,7 +128,6 @@ def pick_up_rubbish():
 
 def find_bin(index):
     # Use OpenCV to capture video feed for QR code scanning
-    video_capture = cv2.VideoCapture(0)
     previous_status = ""
 
     while True:
@@ -153,16 +155,19 @@ def find_bin(index):
             break
     base.base_ctl(0,0,0,1)
     print("successfully find the target bin")
-    # Release the video capture object
-    video_capture.release()
+    
 
 def detect_qrcode(frame, rubbish_index):
     # Implement QR detection logic using OpenCV
     # Return a boolean indicating if rubbish is detected and its position on the centre vertical line
     # Example: return True, True (QR code detection, center vertical line)
     # list = qrcode.detect(frame)
-    list = client.detect(frame)[1]
-    if list == []:
+    total = client.detect(frame)
+    if not total or len(total) == 1:
+        return False, False
+    list = total[1]
+    print("binlist: ", list)
+    if not list:
         return False, False
     else:
         for bin in list:
@@ -192,7 +197,9 @@ def go_to_origin():
 
 if __name__ == "__main__":
     # Main program flow
+
     while True:
+        video_capture = cv2.VideoCapture(camera_index) 
         # Step 1: Find rubbish
         index = find_rubbish()
 
@@ -207,5 +214,9 @@ if __name__ == "__main__":
 
         # Step 5: Go to origin
         go_to_origin()
+
+        video_capture.release()
+
+    
 
         
