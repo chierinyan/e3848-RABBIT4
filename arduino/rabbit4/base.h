@@ -17,6 +17,8 @@
 #define ARM_HOLD_ANGLE 180
 #define ARM_RELEASE_ANGLE 0
 
+#define BUZZER_PIN 63
+
 static const int PWM_PINS[4] = {12, 8, 6, 5};
 static const int DIR1_PINS[4] = {35, 37, 42, 58};
 static const int DIR2_PINS[4] = {34, 36, 43, 59};

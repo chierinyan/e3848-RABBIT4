@@ -1,5 +1,6 @@
 #include <Servo.h>
 #include "base.h"
+#include "music.h"
 
 double prev_error[4] = {0,0,0,0};
 double integral[4] = {0,0,0,0};
@@ -13,6 +14,11 @@ double rps[4] = {0,0,0,0};
 double curr_rps[4] = {0,0,0,0};
 
 int distance = -1;
+
+unsigned playing = 0;
+unsigned duration = 0;
+unsigned long prev_note_time = 0;
+unsigned total_len = sizeof(melody) / sizeof(melody[0]);
 
 Servo armServo;
 
@@ -66,6 +72,8 @@ void base_setup() {
     pinMode(UT_ECHO_PIN, INPUT);
     digitalWrite(UT_TRIG_PIN, LOW);
 
+    pinMode(BUZZER_PIN, OUTPUT);
+
     for (int i=0; i<4; i++) {
         pinMode(PWM_PINS[i], OUTPUT);
         pinMode(DIR1_PINS[i], OUTPUT);
@@ -89,6 +97,20 @@ void base_loop() {
         delayMicroseconds(5);
         digitalWrite(UT_TRIG_PIN, LOW);
         distance = pulseIn(UT_ECHO_PIN, HIGH) / 58;
+    }
+
+    if (curr_time - prev_note_time > 125000) {
+        if (duration < 8/durations[playing]) {
+            duration++;
+        } else {
+            duration = 0;
+            playing++;
+            if (playing >= total_len) {
+                playing = 0;
+            }
+        }
+        tone(BUZZER_PIN, melody[playing]);
+        prev_note_time = curr_time;
     }
 
     for (int i=0; i<4; i++) {
