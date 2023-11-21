@@ -12,6 +12,8 @@ int hold = 1;
 double rps[4] = {0,0,0,0};
 double curr_rps[4] = {0,0,0,0};
 
+int distance = -1;
+
 Servo armServo;
 
 void (*enc_cb[4])() = {
@@ -33,7 +35,7 @@ void set_arm(int cmd) {
 }
 
 byte ultrasonic() {
-    return 233;
+    return distance < 255 ? distance : 255;
 }
 
 void set_motor(int motor) {
@@ -60,6 +62,10 @@ void set_motor(int motor) {
 void base_setup() {
     armServo.attach(ARM_PIN);
 
+    pinMode(UT_TRIG_PIN, OUTPUT);
+    pinMode(UT_ECHO_PIN, INPUT);
+    digitalWrite(UT_TRIG_PIN, LOW);
+
     for (int i=0; i<4; i++) {
         pinMode(PWM_PINS[i], OUTPUT);
         pinMode(DIR1_PINS[i], OUTPUT);
@@ -78,6 +84,11 @@ void base_loop() {
             prev_enc[i] = enc[i];
         }
         prev_time = curr_time;
+
+        digitalWrite(UT_TRIG_PIN, HIGH);
+        delayMicroseconds(5);
+        digitalWrite(UT_TRIG_PIN, LOW);
+        distance = pulseIn(UT_ECHO_PIN, HIGH) / 58;
     }
 
     for (int i=0; i<4; i++) {

@@ -10,6 +10,9 @@
 #define MIN_PWM 16
 #define MAX_PWM 255
 
+#define UT_TRIG_PIN 60
+#define UT_ECHO_PIN 61
+
 #define ARM_PIN 62
 #define ARM_HOLD_ANGLE 180
 #define ARM_RELEASE_ANGLE 0
