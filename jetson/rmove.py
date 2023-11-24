@@ -182,12 +182,12 @@ def detect_qrcode(frame, rubbish_index):
         if list[0][0] == rubbish_index and list[0][1] < 0.5 + center_line_threshold and list[0][1] > 0.5 - center_line_threshold:
              return True, True
         elif list[0][0] > rubbish_index:
-            base.base_ctl(0,linear_speed,0,1)
-            sleep(0.5*linear_time)
+            base.base_ctl(0,-1*linear_speed,0,1)
+            sleep(0.5*linear_time*(list[0][0]-rubbish_index))
             base.base_ctl(0,0,0,1)
-        else:
-            base.base_ctl(0, -1*linear_speed, 0, 1)
-            sleep(0.5*linear_time)
+        elif list[0][0] < rubbish_index:
+            base.base_ctl(0, linear_speed, 0, 1)
+            sleep(0.5*linear_time*(rubbish_index-list[0][0]))
             base.base_ctl(0, 0, 0, 1)
         return False, False
 
@@ -212,10 +212,11 @@ def qrcode_distance(rubbish_index):
             base.base_ctl(0, linear_speed, 0, 1)
             sleep(0.5 * linear_time)
             base.base_ctl(0, 0, 0, 1)
-        elif list[0][0] == rubbish_index and list[0][1] < 0.5 + center_line_threshold:
+        elif list[0][0] == rubbish_index and list[0][1] > 0.5 + center_line_threshold:
             base.base_ctl(0, -1 * linear_speed, 0, 1)
             sleep(0.5 * linear_time)
             base.base_ctl(0, 0, 0, 1)
+        print("height: ", list[0][2])
         return True
 
 def go_to_bin(rubbish_index):
