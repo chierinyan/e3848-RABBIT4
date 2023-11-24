@@ -181,11 +181,11 @@ def detect_qrcode(frame, rubbish_index):
         list.sort(key=bin_rank)
         if list[0][0] == rubbish_index and list[0][1] < 0.5 + center_line_threshold and list[0][1] > 0.5 - center_line_threshold:
              return True, True
-        elif list[0][0] > rubbish_index:
+        elif rubbish_index < list[0][0]:
             base.base_ctl(0,-1*linear_speed,0,1)
             sleep(0.5*linear_time*(list[0][0]-rubbish_index))
             base.base_ctl(0,0,0,1)
-        elif list[0][0] < rubbish_index:
+        elif rubbish_index > list[0][0]:
             base.base_ctl(0, linear_speed, 0, 1)
             sleep(0.5*linear_time*(rubbish_index-list[0][0]))
             base.base_ctl(0, 0, 0, 1)
@@ -204,19 +204,18 @@ def qrcode_distance(rubbish_index):
     if not list:
         return True
     else:
-        list.sort(key=bin_rank)
-        if list[0][0] == rubbish_index and list[0][2] > height_threshold:
-            print("height: ",list[0][2])
-            return False
-        elif list[0][0] == rubbish_index and list[0][1] < 0.5 - center_line_threshold:
-            base.base_ctl(0, linear_speed, 0, 1)
-            sleep(0.5 * linear_time)
-            base.base_ctl(0, 0, 0, 1)
-        elif list[0][0] == rubbish_index and list[0][1] > 0.5 + center_line_threshold:
-            base.base_ctl(0, -1 * linear_speed, 0, 1)
-            sleep(0.5 * linear_time)
-            base.base_ctl(0, 0, 0, 1)
-        print("height: ", list[0][2])
+        for bin in list:
+            if bin[0] == rubbish_index and bin[2] > height_threshold:
+                print("height: ",list[0][2])
+                return False
+            elif bin[0] == rubbish_index and bin[1] < 0.5 - center_line_threshold:
+                base.base_ctl(0, -1*linear_speed, 0, 1)
+                sleep(0.5 * linear_time)
+                base.base_ctl(0, 0, 0, 1)
+            elif bin[0] == rubbish_index and bin[1] > 0.5 + center_line_threshold:
+                base.base_ctl(0, linear_speed, 0, 1)
+                sleep(0.5 * linear_time)
+                base.base_ctl(0, 0, 0, 1)
         return True
 
 def go_to_bin(rubbish_index):
