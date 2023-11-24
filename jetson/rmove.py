@@ -19,7 +19,7 @@ linear_time = 4
 distance_percentage = 0.2
 center_line_threshold = 0.1
 ultrasonic_threshold_distance = 2
-height_threshold = 0.5
+height_threshold = 0.7
 hostaddr = "http://10.68.43.144:4000"
 
 #initialize
@@ -32,8 +32,11 @@ base = Base()
 
 
 # rank the closest rubbish to the middle line to the top priority 
-def rank(element):
+def rubbish_rank(element):
     return abs(0.5-element[2])
+
+def bin_rank(element):
+    return abs(0.5-element[1])
 
 def find_rubbish():
     # Use OpenCV to capture video feed
@@ -88,7 +91,7 @@ def detect_rubbish(frame):
     if list == []:
         return False, False, no_result_label
     else:
-        list.sort(key= rank)
+        list.sort(key= rubbish_rank)
         first_rubbish = list[0]
 
 
@@ -157,8 +160,8 @@ def find_bin(index):
         # If QR code is found, break from the loop
         if qr_code_found and central_vertical_line:
             break
-    base.base_ctl(0,0,0,1)
     print("successfully find the target bin")
+    base.base_ctl(0,0,0,1)
     video_capture.release()
     
 
@@ -175,9 +178,17 @@ def detect_qrcode(frame, rubbish_index):
     if not list:
         return False, False
     else:
-        for bin in list:
-                if bin[0] == rubbish_index and bin[1] < 0.5 + center_line_threshold and bin[1] > 0.5 - center_line_threshold:
-                    return True, True
+        list.sort(key=bin_rank)
+        if list[0][0] == rubbish_index and list[0][1] < 0.5 + center_line_threshold and list[0][1] > 0.5 - center_line_threshold:
+             return True, True
+        elif list[0][0] > rubbish_index:
+            base.base_ctl(0,linear_speed,0,1)
+            sleep(0.5*linear_time)
+            base.base_ctl(0,0,0,1)
+        else:
+            base.base_ctl(0, -1*linear_speed, 0, 1)
+            sleep(0.5*linear_time)
+            base.base_ctl(0, 0, 0, 1)
         return False, False
 
 #if the center of QR code is too hight in the picture, it proves arrives at the QRcode position
@@ -193,10 +204,18 @@ def qrcode_distance(rubbish_index):
     if not list:
         return True
     else:
-        for bin in list:
-                if bin[0] == rubbish_index and bin[2] > height_threshold:
-                    print("height: ",bin[2])
-                    return False
+        list.sort(key=bin_rank)
+        if list[0][0] == rubbish_index and list[0][2] > height_threshold:
+            print("height: ",list[0][2])
+            return False
+        elif list[0][0] == rubbish_index and list[0][1] < 0.5 - center_line_threshold:
+            base.base_ctl(0, linear_speed, 0, 1)
+            sleep(0.5 * linear_time)
+            base.base_ctl(0, 0, 0, 1)
+        elif list[0][0] == rubbish_index and list[0][1] < 0.5 + center_line_threshold:
+            base.base_ctl(0, -1 * linear_speed, 0, 1)
+            sleep(0.5 * linear_time)
+            base.base_ctl(0, 0, 0, 1)
         return True
 
 def go_to_bin(rubbish_index):
