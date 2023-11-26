@@ -4,62 +4,60 @@ import sounddevice as sd
 import Adafruit_SSD1306
 from PIL import Image, ImageDraw, ImageFont
 
-# OLED display initialization
-display = Adafruit_SSD1306.SSD1306_128_64(rst=None, i2c_bus=0, gpio=1)
-display.begin()
-display.clear()
-display.display()
+class Display:
+    def __init__(self):
+        self.create_display()
 
-# Create blank image for drawing
-width = display.width
-height = display.height
-image = Image.new('1', (width, height))
-draw = ImageDraw.Draw(image)
-font = ImageFont.load_default()
+        # Create blank image for drawing
+        self.width = self.display.width
+        self.height = self.display.height
+        self.image = Image.new('1', (self.width, self.height))
+        self.draw = ImageDraw.Draw(self.image)
+        self.font = ImageFont.truetype("DejaVuSans.ttf", 24)
 
-def update_display(noise_level):
-    try:
-        # Draw a black filled box to clear the image
-        draw.rectangle((0, 0, width, height), outline=0, fill=0)
+    def create_display(self):
+        while True:
+            try:
+                self.display = Adafruit_SSD1306.SSD1306_128_64(rst=None, i2c_bus=0, gpio=1)
+                self.display.begin()
+                self.display.clear()
+                self.display.display()
+                break
+            except Exception:
+                print("Error creating display. Retrying...")
+                time.sleep(1)
 
-        font_size = 20
-        font = ImageFont.truetype("DejaVuSans.ttf", font_size)
+    def update_display(self, noise_level):
+        try:
+            self.draw.rectangle((0, 0, self.width, self.height), outline=0, fill=0)
+            self.draw.text((0, 0), f'{noise_level} dB', font=self.font, fill=255)
 
-        # Draw the text
-        draw.text((0, 0), f'{noise_level} dB', font=font, fill=255)
+            self.display.image(self.image)
+            self.display.display()
+        except IOError:
+            print("Error updating display. Retrying...")
+            self.create_display()
 
-        display.image(image)
-        display.display()
-    except IOError:
-        print("Error updating display. Retrying...")
-        time.sleep(1)
 
 def get_noise_level():
     try:
         # Capture a short audio sample
-        duration = 0.5 # Duration in seconds
-        samplerate = 44100 # Sample rate in Hz
+        duration = 0.5
+        samplerate = 44100
         recording = sd.rec(int(duration * samplerate), samplerate=samplerate, channels=1, dtype='float64')
         sd.wait()
 
-        # Calculate noise level
         volume_norm = np.sqrt(np.mean(recording**2))
-
         dbfs = 20 * np.log10(volume_norm) + 70
+
         return int(dbfs)
+
     except Exception as e:
         print(f"Error capturing audio: {e}")
         return 0
 
-try:
+if __name__ == '__main__':
+    display = Display()
     while True:
-        # Get the current noise level
         noise_level = get_noise_level()
-
-        # Update the display with the noise level
-        update_display(noise_level)
-
-except KeyboardInterrupt:
-    print("Stopping noise measurement")
-    display.clear()
-    display.display()
+        display.update_display(noise_level)
