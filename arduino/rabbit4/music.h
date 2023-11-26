@@ -131,7 +131,9 @@ const static int melody[] = {
   NOTE_DS5, NOTE_B4,
   NOTE_DS5, NOTE_D5, NOTE_CS5,
   NOTE_CS4, NOTE_AS4,
-  NOTE_G4
+  NOTE_G4,
+
+  REST, REST, REST, REST, REST, REST, REST, REST
 };
 
 const static int durations[] = {
@@ -169,5 +171,7 @@ const static int durations[] = {
   2, 4,
   4, 8, 4,
   2, 4,
-  1
+  1,
+
+  1, 1, 1, 1, 1, 1, 1, 1
 };

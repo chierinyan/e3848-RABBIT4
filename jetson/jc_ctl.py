@@ -6,7 +6,7 @@ if __name__ == '__main__':
     jc = JC()
     base = Base()
 
-    arm = 1
+    arm = 0
     while True:
         jc.update_status()
 
